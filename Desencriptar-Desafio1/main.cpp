@@ -18,18 +18,21 @@ int main()
         unsigned char* datosEncriptados = leerArchivoEncriptado(nombreEncriptado, tamañoEncriptado);
         char* pista = leerFragmentoConocido(nombrePista, longitudPista);
 
-        if (datosEncriptados && pista) {
+        if (datosEncriptados && pista)
+        {
             cout << "Archivos leidos correctamente" << endl;
             cout << "Peso encriptado: " << tamañoEncriptado << " bytes" << endl;
             cout << "Pista: " << pista << endl;
-        } else {
+        }
+        else
+        {
             cout << "Error leyendo archivos del caso " << i << endl;
         }
-
+        int k = 0x40;
+        int n = 3;
+        desencriptar(datosEncriptados, tamañoEncriptado, k, n);
         liberarBuffer(datosEncriptados);
         liberarBuffer(pista);
-        int k = 0x5A;
-        desencriptar(datosEncriptados, tamañoEncriptado, k);
     }
     return 0;
 }
