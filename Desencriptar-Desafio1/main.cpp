@@ -1,5 +1,6 @@
 #include <iostream>
 #include "io_utils.h"
+#include "crypto.h"
 using namespace std;
 int main()
 {
@@ -27,6 +28,8 @@ int main()
 
         liberarBuffer(datosEncriptados);
         liberarBuffer(pista);
+        int k = 0x5A;
+        desencriptar(datosEncriptados, tamañoEncriptado, k);
     }
     return 0;
 }

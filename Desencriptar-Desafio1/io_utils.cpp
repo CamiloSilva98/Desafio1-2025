@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 using namespace std;
+
 unsigned char* leerArchivoEncriptado(const char* nombreArchivo, size_t& tamaño)
 {
     ifstream archivo(nombreArchivo, ios::binary);
