@@ -41,7 +41,7 @@ int main()
 }
 
 
-// ------ DESCOMPRESIÓN RLE ------
+// ------ DESCOMPRESIÓN RLE -----
 // Formato asumido: pares (count, symbol) en bytes consecutivos.
 // Ejemplo: [3]['A'][2]['B'] → "AAABB"
 
@@ -73,3 +73,11 @@ char* descomprimirRle(const unsigned char* datos, size_t tamaño, size_t& salida
 }
 
 
+// ----- DESCOMPRESIÓN LZ78 -----
+// Formato asumido: cada entrada = [uint16_t index][char symbol]
+// Ejemplo clásico: (0,'A')(0,'B')(2,'A')(2,'B')...
+
+char* descomprimirLz78(){
+
+    return 0
+}
