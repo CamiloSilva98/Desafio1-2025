@@ -41,7 +41,7 @@ int main()
 }
 
 
-// ------ DESCOMPRESIÓN RLE -----
+// ------ DESCOMPRESIÓN RLE ------
 // Formato asumido: pares (count, symbol) en bytes consecutivos.
 // Ejemplo: [3]['A'][2]['B'] → "AAABB"
 
@@ -73,11 +73,90 @@ char* descomprimirRle(const unsigned char* datos, size_t tamaño, size_t& salida
 }
 
 
+
 // ----- DESCOMPRESIÓN LZ78 -----
 // Formato asumido: cada entrada = [uint16_t index][char symbol]
 // Ejemplo clásico: (0,'A')(0,'B')(2,'A')(2,'B')...
 
-char* descomprimirLz78(){
+struct NodoLZ78 {
+    int parent;
+    char symbol;
+};
 
-    return 0
+char* descomprimirLz78(const unsigned char* datos, size_t tamaño, size_t& salidaSize) {
+    // Diccionario dinámico de nodos
+    size_t capacidadDict = 1024;
+    size_t usadosDict = 0;
+    NodoLZ78* dict = (NodoLZ78*)malloc(capacidadDict * sizeof(NodoLZ78));
+    if (!dict) return nullptr;
+
+    // Buffer de salida dinámico
+    size_t capacidadOut = tamaño * 16;
+    char* salida = (char*)malloc(capacidadOut);
+    if (!salida) {
+        free(dict);
+        return nullptr;
+    }
+
+    size_t posOut = 0;
+    size_t pos = 0;
+
+    while (pos + 3 <= tamaño) {
+        uint16_t indice = (datos[pos] << 8) | datos[pos + 1]; // big endian
+        char simbolo = (char)datos[pos + 2];
+        pos += 3;
+
+        // Reconstruir palabra
+        char temp[4096];
+        int tempLen = 0;
+
+        if (indice > 0 && indice <= usadosDict) {
+            int p = indice - 1;
+            while (p >= 0) {
+                if (tempLen < 4096) {
+                    temp[tempLen++] = dict[p].symbol;
+                }
+                p = dict[p].parent;
+            }
+            // invertir
+            for (int i = tempLen - 1; i >= 0; i--) {
+                if (posOut >= capacidadOut) {
+                    capacidadOut *= 2;
+                    salida = (char*)realloc(salida, capacidadOut);
+                    if (!salida) {
+                        free(dict);
+                        return nullptr;
+                    }
+                }
+                salida[posOut++] = temp[i];
+            }
+        }
+
+        // añadir el símbolo final
+        if (posOut >= capacidadOut) {
+            capacidadOut *= 2;
+            salida = (char*)realloc(salida, capacidadOut);
+            if (!salida) {
+                free(dict);
+                return nullptr;
+            }
+        }
+        salida[posOut++] = simbolo;
+
+        // Añadir nueva entrada al diccionario
+        if (usadosDict >= capacidadDict) {
+            capacidadDict *= 2;
+            dict = (NodoLZ78*)realloc(dict, capacidadDict * sizeof(NodoLZ78));
+            if (!dict) return nullptr;
+        }
+        dict[usadosDict].parent = indice - 1;
+        dict[usadosDict].symbol = simbolo;
+        usadosDict++;
+    }
+
+    salidaSize = posOut;
+    salida = (char*)realloc(salida, salidaSize);
+
+    free(dict);
+    return salida;
 }
