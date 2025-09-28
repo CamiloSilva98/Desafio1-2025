@@ -20,9 +20,9 @@ char* descomprimirRle(const unsigned char* datos, size_t tamano, size_t& tamanoS
     }
 
     size_t posSalida = 0;
-    for (size_t i = 0; i + 1 < tamano; i += 2) {
-        unsigned char cantidad = datos[i];
-        char simbolo = static_cast<char>(datos[i + 1]);
+    for (size_t i = 0; i + 1 < tamano; i += 3) {
+        unsigned char cantidad = datos[i+1];
+        char simbolo = static_cast<char>(datos[i + 2]);
 
         if (posSalida + static_cast<size_t>(cantidad) >= capacidad) {
             while (posSalida + static_cast<size_t>(cantidad) >= capacidad) capacidad *= 2;

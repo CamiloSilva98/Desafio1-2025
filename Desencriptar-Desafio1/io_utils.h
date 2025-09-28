@@ -1,5 +1,6 @@
 #ifndef IO_UTILS_H
 #define IO_UTILS_H
+
 #include <cstddef>
 
 unsigned char* leerArchivoEncriptado(const char* nombreArchivo, size_t& tamano);
