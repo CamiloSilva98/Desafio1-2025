@@ -3,19 +3,20 @@
 #include <fstream>
 using namespace std;
 
-unsigned char* leerArchivoEncriptado(const char* nombreArchivo, size_t& tamaño)
+unsigned char* leerArchivoEncriptado(const char* nombreArchivo, size_t& tamano)
 {
     ifstream archivo(nombreArchivo, ios::binary);
     if (!archivo.is_open())
     {
         cout << "Error: No se pudo abrir " << nombreArchivo << endl;
+        tamano = 0;
         return nullptr;
     }
     archivo.seekg(0, ios::end);
-    tamaño = archivo.tellg();
+    tamano = static_cast<size_t>(archivo.tellg());
     archivo.seekg(0, ios::beg);
-    unsigned char* buffer = new unsigned char[tamaño];
-    archivo.read(reinterpret_cast<char*>(buffer), tamaño);
+    unsigned char* buffer = new unsigned char[tamano];
+    archivo.read(reinterpret_cast<char*>(buffer), tamano);
     archivo.close();
     return buffer;
 }
@@ -25,10 +26,11 @@ char* leerFragmentoConocido(const char* nombreArchivo, size_t& longitud)
     if (!archivo.is_open())
     {
         cout << "Error: No se pudo abrir " << nombreArchivo << endl;
+        longitud = 0;
         return nullptr;
     }
     archivo.seekg(0, ios::end);
-    longitud = archivo.tellg();
+    longitud = static_cast<size_t>(archivo.tellg());
     archivo.seekg(0, ios::beg);
     char* fragmento = new char[longitud + 1];
     archivo.read(fragmento, longitud);
@@ -48,6 +50,7 @@ bool guardarMensajeRecuperado(const char* nombreArchivo, const char* mensaje, si
     archivo.close();
     return true;
 }
+
 void liberarBuffer(void* buffer)
 {
     delete[] static_cast<unsigned char*>(buffer);

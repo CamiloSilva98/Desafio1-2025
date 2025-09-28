@@ -4,6 +4,6 @@
 
 unsigned char aplicarXor(unsigned char byte, unsigned char K);
 unsigned char rotarNDerecha(unsigned char x, int n);
-void desencriptar(unsigned char* buffer, size_t tamaño, unsigned char K, int n);
+void desencriptar(unsigned char* buffer, size_t tamano, unsigned char K, int n);
 
 #endif // CRYPTO_H
