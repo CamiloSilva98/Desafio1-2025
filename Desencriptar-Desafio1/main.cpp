@@ -1,24 +1,28 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include "io_utils.h"
-#include "crypto.h"
-#include "descompresion.h"
+#include "analyzer.h"
 using namespace std;
+
 int main()
 {
     int numCasos;
     cout << "Cuantos archivos se evaluaran?: ";
     cin >> numCasos;
 
-    for (int i=1;i<=numCasos;i++)
+    for (int i = 1; i <= numCasos; i++)
     {
         char nombreEncriptado[50];
         char nombrePista[50];
         char nombreSalida[50];
+
         sprintf(nombreEncriptado, "Archivos\\Encriptado%d.txt", i);
         sprintf(nombrePista, "Archivos\\pista%d.txt", i);
+
         cout << "Procesando caso " << i << "..." << endl;
+
         size_t tamano = 0;
         size_t longitudPista = 0;
         unsigned char* datosEncriptados = leerArchivoEncriptado(nombreEncriptado, tamano);
@@ -30,87 +34,78 @@ int main()
             cout << "Peso encriptado: " << tamano << " bytes" << endl;
             cout << "Pista: " << pista << endl;
 
-            // Parámetros de desencriptación
-            unsigned char clave = 0x40;
-            int rotacion = 3;
+            int metodoEncontrado = -1;      // 0=RLE, 1=LZ78
+            unsigned char claveEncontrada = 0;
+            int rotacionEncontrada = 0;
 
-            // Desencriptar datos
-            desencriptar(datosEncriptados, tamano, clave, rotacion);
+            cout << "Iniciando busqueda exhaustiva..." << endl;
 
-            bool encontrado = false;
+            // Llamar a la función del analyzer
+            char* mensajeRecuperado = identify_and_recover(
+                datosEncriptados,
+                tamano,
+                pista,
+                longitudPista,
+                metodoEncontrado,
+                claveEncontrada,
+                rotacionEncontrada
+                );
 
-            // Búsqueda exhaustiva según el preinforme: 2 métodos × 7 rotaciones × 256 claves
-            for (unsigned char clave = 0; clave <= 255 && !encontrado; clave++)
+            if (mensajeRecuperado)
             {
-                for (int rotacion = 1; rotacion <= 7 && !encontrado; rotacion++)
+                // ¡ÉXITO! Se encontró la solución
+                cout << "EXITO! Pista encontrada" << endl;
+                cout << "Metodo: " << (metodoEncontrado == 0 ? "RLE" : "LZ78") << endl;
+                cout << "Clave: 0x" <<hex << (int)claveEncontrada << dec << endl;
+                cout << "Rotacion: " << rotacionEncontrada << " bits" << endl;
+
+                // El tamaño se puede obtener con strlen para texto o calcularlo
+                size_t tamanoRecuperado = strlen(mensajeRecuperado);
+                cout << "Tamanio recuperado: " << tamanoRecuperado << " bytes" << endl;
+
+                // Crear nombre del archivo de salida
+                sprintf(nombreSalida, "Archivos\\Recuperado_%s_%d.txt",(metodoEncontrado == 0 ? "RLE" : "LZ78"), i);
+                if (guardarMensajeRecuperado(nombreSalida, mensajeRecuperado, tamanoRecuperado))
                 {
-                    // Crear una copia para no modificar los datos originales
-                    unsigned char* datosCopia = new unsigned char[tamano];
-                    for (size_t j = 0; j < tamano; j++) {
-                        datosCopia[j] = datosEncriptados[j];
-                    }
-
-                    // Desencriptar datos (XOR primero, luego rotación según el preinforme)
-                    desencriptar(datosCopia, tamano, clave, rotacion);
-
-                    // Probar RLE
-                    size_t tamanoSalidaRle = 0;
-                    char* salidaRle = descomprimirRle(datosCopia, tamano, tamanoSalidaRle);
-
-                    if (salidaRle && tamanoSalidaRle > 0) {
-                        int pos = buscar_subarray(salidaRle, tamanoSalidaRle, pista, longitudPista);
-                        if (pos >= 0) {
-                            sprintf(nombreSalida, "Archivos\\Recuperado_RLE_%d.txt", i);
-                            if (guardarArchivoBuffer(salidaRle, tamanoSalidaRle, nombreSalida)) {
-                                cout << "¡EXITO! Pista encontrada con RLE, clave=" << (int)clave
-                                     << ", rotacion=" << rotacion << endl;
-                                cout << "Archivo guardado: " << nombreSalida << endl;
-                            }
-                            encontrado = true;
-                        }
-                        free(salidaRle);
-                    }
-
-                    // Probar LZ78 si RLE no funcionó
-                    if (!encontrado) {
-                        size_t tamanoSalidaLz = 0;
-                        char* salidaLz = descomprimirLz78(datosCopia, tamano, tamanoSalidaLz);
-
-                        if (salidaLz && tamanoSalidaLz > 0) {
-                            int posL = buscar_subarray(salidaLz, tamanoSalidaLz, pista, longitudPista);
-                            if (posL >= 0) {
-                                sprintf(nombreSalida, "Archivos\\Recuperado_LZ78_%d.txt", i);
-                                if (guardarArchivoBuffer(salidaLz, tamanoSalidaLz, nombreSalida)) {
-                                    cout << "¡EXITO! Pista encontrada con LZ78, clave=" << (int)clave
-                                         << ", rotacion=" << rotacion << endl;
-                                    cout << "Archivo guardado: " << nombreSalida << endl;
-                                }
-                                encontrado = true;
-                            }
-                            free(salidaLz);
-                        }
-                    }
-
-                    delete[] datosCopia;
+                    cout << "Archivo guardado: " << nombreSalida << endl;
                 }
-            }
+                else
+                {
+                    cout << "Error al guardar el archivo" << endl;
+                }
+                // Mostrar parte del mensaje recuperado
+                cout << "Mensaje recuperado: ";
+                for (size_t j = 0; j < min(100, (int)tamanoRecuperado); j++)
+                {
+                    cout << mensajeRecuperado[j];
+                }
+                if (tamanoRecuperado > 100) cout << "...";
+                cout << endl;
 
-            if (!encontrado) {
-                cout << "ADVERTENCIA: La pista no fue encontrada en ninguna combinación para el caso " << i << endl;
+                // Liberar memoria del mensaje recuperado
+                free(mensajeRecuperado);
+            }
+            else
+            {
+                cout << "ADVERTENCIA: La pista no fue encontrada en ninguna combinacion para el caso " << i << endl;
             }
         }
         else
         {
             cout << "Error leyendo archivos del caso " << i << endl;
         }
-
-        // Siempre liberar memoria al final
-        if (datosEncriptados) {
+        // Liberar memoria de los archivos leídos
+        if (datosEncriptados)
+        {
             liberarBuffer(datosEncriptados);
         }
-        if (pista) {
+        if (pista)
+        {
             liberarBuffer(pista);
         }
+
+        cout << "\n================================\n" << endl;
     }
+
     return 0;
 }

@@ -1,5 +1,6 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
+
 #include <cstddef>
 
 unsigned char aplicarXor(unsigned char byte, unsigned char K);
