@@ -42,8 +42,9 @@ char* descomprimirRle(const unsigned char* datos, size_t tamano, size_t& tamanoS
         return nullptr;
     }
 
-    char* bufferFinal = static_cast<char*>(std::realloc(bufferSalida, posSalida));
+    char* bufferFinal = static_cast<char*>(std::realloc(bufferSalida, posSalida+1));
     if (bufferFinal) bufferSalida = bufferFinal;
+    bufferSalida[posSalida] = '\0';
     tamanoSalida = posSalida;
     return bufferSalida;
 }
@@ -145,10 +146,11 @@ char* descomprimirLz78(const unsigned char* datos, size_t tamano, size_t& tamano
         tamanoSalida = 0;
         return nullptr;
     }
-    char* bufferFinal = static_cast<char*>(std::realloc(bufferSalida, posSalida));
+    char* bufferFinal = static_cast<char*>(std::realloc(bufferSalida, posSalida+1));
     if (bufferFinal) {
         bufferSalida = bufferFinal;
     }
+    bufferSalida[posSalida] = '\0';
     tamanoSalida = posSalida;
 
     std::free(diccionario);
